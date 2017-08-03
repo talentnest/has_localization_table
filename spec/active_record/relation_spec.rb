@@ -1,6 +1,16 @@
 require 'spec_helper'
 #require 'active_record/relation'
 
+class ScopeInspector
+  def call_scope(s)
+    instance_exec(&s)
+  end
+
+  def where(conditions)
+    conditions
+  end
+end
+
 describe HasLocalizationTable do
   before do
     # Configure HLT
@@ -80,20 +90,24 @@ describe HasLocalizationTable do
       end
     end
 
-    it "should use the current locale for the has_one association" do
-      locale = MiniTest::Mock.new
-      locale.expect :id, 2
+    describe 'has_one uses current locale' do
+      let(:inspector) { ScopeInspector.new }
 
-      conditions = subject.reflect_on_association(:string).options[:conditions]
+      it "should use the current locale for the has_one association" do
+        locale = MiniTest::Mock.new
+        locale.expect :id, 2
 
-      HasLocalizationTable.stub :current_locale, locale do
-        conditions.call.must_equal "article_localizations.locale_id = 2"
-      end
+        scope = subject.reflect_on_association(:string).scope
 
-      locale.expect :id, 3
+        HasLocalizationTable.stub :current_locale, locale do
+          inspector.call_scope(scope).must_equal 'article_localizations.locale_id = 2'
+        end
 
-      HasLocalizationTable.stub :current_locale, locale do
-        conditions.call.must_equal "article_localizations.locale_id = 3"
+        locale.expect :id, 3
+
+        HasLocalizationTable.stub :current_locale, locale do
+          inspector.call_scope(scope).must_equal 'article_localizations.locale_id = 3'
+        end
       end
     end
 
