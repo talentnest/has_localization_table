@@ -14,7 +14,7 @@ module HasLocalizationTable
       def with_localizations(locale = HasLocalizationTable.current_locale.id)
         lcat = localization_class.arel_table
 
-        scoped.joins(
+        all.joins(
           arel_table.join(lcat, Arel::Nodes::OuterJoin).
             on(lcat[:"#{self.name.underscore}_id"].eq(arel_table[self.primary_key]).and(lcat[HasLocalizationTable.locale_foreign_key].eq(locale))).
             join_sql
@@ -39,11 +39,11 @@ module HasLocalizationTable
         association_name = localization_association_name.to_s.singularize.to_sym
         association_name = :localization if localized_attributes.include?(association_name)
 
-        has_one_options = localization_table_options.except(*RESERVED_KEYS).
-          merge(conditions: -> * { "#{table_name}.#{foreign_key} = #{HasLocalizationTable.current_locale.id}" })
+        has_one_options = localization_table_options.except(*RESERVED_KEYS)
+        has_one_scope = -> * { where("#{table_name}.#{foreign_key} = #{HasLocalizationTable.current_locale.id}") }
 
-        self.has_one association_name, has_one_options
-        self.has_one(:localization, has_one_options) unless association_name == :localization
+        self.has_one association_name, has_one_scope, has_one_options
+        self.has_one(:localization, has_one_scope, has_one_options) unless association_name == :localization
       end
 
       # Collect all localizations for the object
