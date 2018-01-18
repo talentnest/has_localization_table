@@ -88,12 +88,17 @@ module HasLocalizationTable
             end
           end
 
-          assoc.to_a.sort_by!{ |l| locale_ids.index(l.send(HasLocalizationTable.locale_foreign_key)) || 0 }
+          sorted_assoc = assoc.sort_by{ |l| locale_ids.index(l.send(HasLocalizationTable.locale_foreign_key)) || 0 }
+          assoc.replace(sorted_assoc)
         end
 
         # Remove localization objects that are not filled in
         def reject_empty_localizations!
-          localization_association.to_a.reject! { |l| !l.persisted? && localized_attributes.all?{ |attr| l.send(attr).blank? } }
+          without_rejected_records = localization_association.reject do |l|
+            !l.persisted? && localized_attributes.all?{ |attr| l.send(attr).blank? }
+          end
+
+          localization_association.replace(without_rejected_records)
         end
       end
     end
