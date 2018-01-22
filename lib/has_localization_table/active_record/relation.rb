@@ -94,11 +94,11 @@ module HasLocalizationTable
 
         # Remove localization objects that are not filled in
         def reject_empty_localizations!
-          without_rejected_records = localization_association.reject do |l|
+          without_empty_localizations = localization_association.reject do |l|
             !l.persisted? && localized_attributes.all?{ |attr| l.send(attr).blank? }
           end
 
-          localization_association.replace(without_rejected_records)
+          localization_association = without_empty_localizations
         end
       end
     end
