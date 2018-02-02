@@ -17,7 +17,7 @@ module HasLocalizationTable
         all.joins(
           arel_table.join(lcat, Arel::Nodes::OuterJoin).
             on(lcat[:"#{self.name.underscore}_id"].eq(arel_table[self.primary_key]).and(lcat[HasLocalizationTable.locale_foreign_key].eq(locale))).
-            join_sql
+            join_sources
         )
       end
 
