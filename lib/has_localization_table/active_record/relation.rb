@@ -81,13 +81,16 @@ module HasLocalizationTable
 
           locale_ids = HasLocalizationTable.all_locales.map(&:id)
           assoc = association(localization_association_name).reader
+          new_assoc_built = false
 
           HasLocalizationTable.all_locales.each do |locale|
             unless assoc.detect{ |record| record.send(HasLocalizationTable.locale_foreign_key) == locale.id }
               assoc.build(HasLocalizationTable.locale_foreign_key => locale.id)
+              new_assoc_built = true
             end
           end
 
+          return unless new_assoc_built
           sorted_assoc = assoc.sort_by{ |l| locale_ids.index(l.send(HasLocalizationTable.locale_foreign_key)) || 0 }
           assoc.replace(sorted_assoc)
         end
